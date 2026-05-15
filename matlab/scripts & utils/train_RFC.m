@@ -1,0 +1,9 @@
+function mdl = train_RFC(X, y)
+
+    t = templateTree('MinLeafSize', 5);
+
+    mdl = fitcensemble(X, y, ...
+        'Method','Bag', ...
+        'NumLearningCycles',100, ...
+        'Learners', t);
+end
