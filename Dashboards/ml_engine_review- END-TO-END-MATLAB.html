@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ML Engine Review — Regression & Classification</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #05080f;
+    --surface: #0d1220;
+    --card: #111827;
+    --border: #1e2d45;
+    --accent1: #00e5ff;
+    --accent2: #a78bfa;
+    --accent3: #34d399;
+    --accent4: #f59e0b;
+    --danger: #f87171;
+    --text: #e2e8f0;
+    --muted: #64748b;
+    --font-head: 'Syne', sans-serif;
+    --font-mono: 'Space Mono', monospace;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-mono);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Animated grid background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0,229,255,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,229,255,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container { position: relative; z-index: 1; max-width: 1300px; margin: 0 auto; padding: 40px 24px; }
+
+  /* ── HEADER ── */
+  header {
+    display: flex; align-items: flex-start; justify-content: space-between;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 32px; margin-bottom: 40px;
+    flex-wrap: wrap; gap: 16px;
+  }
+  .header-left h1 {
+    font-family: var(--font-head);
+    font-weight: 800; font-size: clamp(1.8rem, 4vw, 2.8rem);
+    line-height: 1.1;
+    background: linear-gradient(135deg, var(--accent1), var(--accent2));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .header-left .subtitle {
+    font-size: 0.75rem; color: var(--muted); margin-top: 6px;
+    letter-spacing: 0.15em; text-transform: uppercase;
+  }
+  .badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: rgba(0,229,255,0.08); border: 1px solid rgba(0,229,255,0.25);
+    border-radius: 4px; padding: 4px 10px;
+    font-size: 0.7rem; color: var(--accent1);
+    letter-spacing: 0.08em; text-transform: uppercase;
+  }
+  .badge::before { content: '●'; font-size: 0.5rem; animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+  /* ── SECTION TITLE ── */
+  .section-title {
+    font-family: var(--font-head);
+    font-weight: 600; font-size: 1rem;
+    color: var(--muted); letter-spacing: 0.12em;
+    text-transform: uppercase;
+    display: flex; align-items: center; gap: 10px;
+    margin-bottom: 20px;
+  }
+  .section-title::after {
+    content: ''; flex: 1; height: 1px; background: var(--border);
+  }
+
+  /* ── STAT CARDS ROW ── */
+  .stat-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    gap: 16px; margin-bottom: 40px;
+  }
+  .stat-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px;
+    position: relative; overflow: hidden;
+    transition: border-color 0.2s;
+  }
+  .stat-card:hover { border-color: var(--accent1); }
+  .stat-card .accent-bar {
+    position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  }
+  .stat-card .label { font-size: 0.65rem; color: var(--muted); letter-spacing: 0.12em; text-transform: uppercase; }
+  .stat-card .value {
+    font-family: var(--font-head); font-weight: 800;
+    font-size: 2rem; margin: 6px 0 2px;
+  }
+  .stat-card .sub { font-size: 0.7rem; color: var(--muted); }
+
+  /* ── TWO COLUMN ENGINE LAYOUT ── */
+  .engines-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    margin-bottom: 40px;
+  }
+  @media(max-width:800px){ .engines-grid { grid-template-columns: 1fr; } }
+
+  .engine-block {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .engine-header {
+    padding: 18px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 12px;
+  }
+  .engine-icon {
+    width: 36px; height: 36px;
+    border-radius: 6px;
+    display: grid; place-items: center;
+    font-size: 1.1rem;
+  }
+  .engine-header h2 {
+    font-family: var(--font-head); font-weight: 800;
+    font-size: 1.1rem;
+  }
+  .engine-header .tag {
+    margin-left: auto; font-size: 0.62rem;
+    padding: 3px 8px; border-radius: 3px;
+    text-transform: uppercase; letter-spacing: 0.1em;
+  }
+
+  /* ── MODEL TABLE ── */
+  .model-table { width: 100%; border-collapse: collapse; }
+  .model-table th {
+    font-size: 0.62rem; letter-spacing: 0.12em;
+    text-transform: uppercase; color: var(--muted);
+    padding: 10px 20px; text-align: left;
+    border-bottom: 1px solid var(--border);
+  }
+  .model-table td {
+    padding: 11px 20px;
+    font-size: 0.75rem;
+    border-bottom: 1px solid rgba(30,45,69,0.5);
+    vertical-align: middle;
+  }
+  .model-table tr:last-child td { border-bottom: none; }
+  .model-table tr:hover td { background: rgba(0,229,255,0.03); }
+
+  .model-name { font-weight: 700; color: var(--text); }
+  .model-algo { color: var(--muted); font-size: 0.68rem; margin-top: 2px; }
+
+  /* Score bar */
+  .score-wrap { display: flex; align-items: center; gap: 8px; }
+  .score-bar-bg {
+    flex: 1; height: 5px; background: var(--border);
+    border-radius: 99px; overflow: hidden;
+  }
+  .score-bar-fill { height: 100%; border-radius: 99px; }
+  .score-val { font-size: 0.72rem; font-weight: 700; min-width: 38px; text-align: right; }
+
+  /* Status pill */
+  .pill {
+    display: inline-block;
+    padding: 2px 8px; border-radius: 3px;
+    font-size: 0.62rem; letter-spacing: 0.06em;
+    text-transform: uppercase; font-weight: 700;
+  }
+  .pill-pass { background: rgba(52,211,153,0.12); color: var(--accent3); }
+  .pill-warn { background: rgba(245,158,11,0.12); color: var(--accent4); }
+  .pill-fail { background: rgba(248,113,113,0.12); color: var(--danger); }
+
+  /* ── CHECKLIST ── */
+  .check-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 24px; margin-bottom: 40px;
+  }
+  .check-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px; padding: 20px;
+  }
+  .check-card h3 {
+    font-family: var(--font-head); font-weight: 700;
+    font-size: 0.95rem; margin-bottom: 14px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .check-item {
+    display: flex; align-items: flex-start; gap: 10px;
+    padding: 7px 0; border-bottom: 1px solid rgba(30,45,69,0.5);
+    font-size: 0.73rem;
+  }
+  .check-item:last-child { border-bottom: none; }
+  .check-icon { font-size: 0.85rem; flex-shrink: 0; margin-top: 1px; }
+  .check-text .main { color: var(--text); }
+  .check-text .desc { color: var(--muted); font-size: 0.65rem; margin-top: 2px; }
+
+  /* ── PIPELINE STEPS ── */
+  .pipeline {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px; padding: 24px;
+    margin-bottom: 40px;
+  }
+  .pipe-steps {
+    display: flex; gap: 0;
+    overflow-x: auto; padding-bottom: 8px;
+  }
+  .pipe-step {
+    flex: 1; min-width: 120px;
+    text-align: center; position: relative;
+  }
+  .pipe-step:not(:last-child)::after {
+    content: '→';
+    position: absolute; right: -10px; top: 14px;
+    color: var(--muted); font-size: 1rem;
+    z-index: 1;
+  }
+  .pipe-dot {
+    width: 42px; height: 42px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 8px;
+    font-size: 1.1rem;
+    border: 2px solid;
+  }
+  .pipe-label { font-size: 0.65rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+  .pipe-sub { font-size: 0.6rem; color: rgba(100,116,139,0.7); margin-top: 2px; }
+
+  /* ── METRICS SUMMARY ── */
+  .metrics-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 16px; margin-bottom: 40px;
+  }
+  .metric-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px; padding: 18px 20px;
+  }
+  .metric-card h4 {
+    font-family: var(--font-head); font-weight: 700;
+    font-size: 0.85rem; margin-bottom: 12px;
+    color: var(--accent1);
+  }
+  .metric-item {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 5px 0; font-size: 0.72rem;
+    border-bottom: 1px solid rgba(30,45,69,0.4);
+  }
+  .metric-item:last-child { border-bottom: none; }
+  .metric-item .k { color: var(--muted); }
+  .metric-item .v { font-weight: 700; }
+
+  /* ── FOOTER ── */
+  footer {
+    border-top: 1px solid var(--border);
+    padding-top: 20px; margin-top: 20px;
+    display: flex; justify-content: space-between;
+    flex-wrap: wrap; gap: 10px;
+    font-size: 0.65rem; color: var(--muted);
+  }
+
+  /* Animations */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(18px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .fade-up { animation: fadeUp 0.5s ease both; }
+  .delay-1 { animation-delay: 0.08s; }
+  .delay-2 { animation-delay: 0.16s; }
+  .delay-3 { animation-delay: 0.24s; }
+  .delay-4 { animation-delay: 0.32s; }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- HEADER -->
+  <header class="fade-up">
+    <div class="header-left">
+      <h1>ML Engine Review</h1>
+      <div class="subtitle">End-to-End · Regression &amp; Classification · Data Analysis</div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:8px;align-items:flex-end;">
+      <span class="badge">Live Review</span>
+      <span style="font-size:0.65rem;color:var(--muted);">v2.0 · April 2026</span>
+    </div>
+  </header>
+
+  <!-- STAT CARDS -->
+  <div class="section-title fade-up delay-1">Overview Metrics</div>
+  <div class="stat-row fade-up delay-1">
+    <div class="stat-card">
+      <div class="accent-bar" style="background:linear-gradient(90deg,var(--accent1),var(--accent2))"></div>
+      <div class="label">Total Models</div>
+      <div class="value" style="color:var(--accent1)">12</div>
+      <div class="sub">6 Regression · 6 Classification</div>
+    </div>
+    <div class="stat-card">
+      <div class="accent-bar" style="background:linear-gradient(90deg,var(--accent3),var(--accent1))"></div>
+      <div class="label">Best R² Score</div>
+      <div class="value" style="color:var(--accent3)">0.97</div>
+      <div class="sub">XGBoost Regressor</div>
+    </div>
+    <div class="stat-card">
+      <div class="accent-bar" style="background:linear-gradient(90deg,var(--accent2),var(--accent4))"></div>
+      <div class="label">Best Accuracy</div>
+      <div class="value" style="color:var(--accent2)">98.2%</div>
+      <div class="sub">Random Forest Classifier</div>
+    </div>
+    <div class="stat-card">
+      <div class="accent-bar" style="background:linear-gradient(90deg,var(--accent4),var(--danger))"></div>
+      <div class="label">Passed QA</div>
+      <div class="value" style="color:var(--accent4)">10/12</div>
+      <div class="sub">2 need re-tuning</div>
+    </div>
+    <div class="stat-card">
+      <div class="accent-bar" style="background:linear-gradient(90deg,var(--accent3),var(--accent2))"></div>
+      <div class="label">Avg Training Time</div>
+      <div class="value" style="color:var(--accent3)">4.2s</div>
+      <div class="sub">Across all engines</div>
+    </div>
+  </div>
+
+  <!-- PIPELINE -->
+  <div class="section-title fade-up delay-2">End-to-End Pipeline</div>
+  <div class="pipeline fade-up delay-2">
+    <div class="pipe-steps">
+      <div class="pipe-step">
+        <div class="pipe-dot" style="background:rgba(0,229,255,0.1);border-color:var(--accent1);color:var(--accent1)">📥</div>
+        <div class="pipe-label">Data Ingestion</div>
+        <div class="pipe-sub">CSV / DB / API</div>
+      </div>
+      <div class="pipe-step">
+        <div class="pipe-dot" style="background:rgba(167,139,250,0.1);border-color:var(--accent2);color:var(--accent2)">🔧</div>
+        <div class="pipe-label">Preprocessing</div>
+        <div class="pipe-sub">Clean · Impute · Scale</div>
+      </div>
+      <div class="pipe-step">
+        <div class="pipe-dot" style="background:rgba(52,211,153,0.1);border-color:var(--accent3);color:var(--accent3)">📊</div>
+        <div class="pipe-label">EDA</div>
+        <div class="pipe-sub">Distributions · Corr</div>
+      </div>
+      <div class="pipe-step">
+        <div class="pipe-dot" style="background:rgba(245,158,11,0.1);border-color:var(--accent4);color:var(--accent4)">🧩</div>
+        <div class="pipe-label">Feature Eng.</div>
+        <div class="pipe-sub">Encode · Select · PCA</div>
+      </div>
+      <div class="pipe-step">
+        <div class="pipe-dot" style="background:rgba(0,229,255,0.1);border-color:var(--accent1);color:var(--accent1)">⚙️</div>
+        <div class="pipe-label">Model Train</div>
+        <div class="pipe-sub">CV · GridSearch</div>
+      </div>
+      <div class="pipe-step">
+        <div class="pipe-dot" style="background:rgba(167,139,250,0.1);border-color:var(--accent2);color:var(--accent2)">📈</div>
+        <div class="pipe-label">Evaluation</div>
+        <div class="pipe-sub">Metrics · Plots</div>
+      </div>
+      <div class="pipe-step">
+        <div class="pipe-dot" style="background:rgba(52,211,153,0.1);border-color:var(--accent3);color:var(--accent3)">🚀</div>
+        <div class="pipe-label">Deploy</div>
+        <div class="pipe-sub">API · Pickle · ONNX</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ENGINES GRID -->
+  <div class="section-title fade-up delay-2">Engine Results</div>
+  <div class="engines-grid fade-up delay-3">
+
+    <!-- REGRESSION BLOCK -->
+    <div class="engine-block">
+      <div class="engine-header" style="background:rgba(0,229,255,0.04)">
+        <div class="engine-icon" style="background:rgba(0,229,255,0.12);color:var(--accent1)">📉</div>
+        <div>
+          <h2 style="color:var(--accent1)">Regression Engines</h2>
+          <div style="font-size:0.65rem;color:var(--muted)">Continuous Target Prediction</div>
+        </div>
+        <span class="tag pill pill-pass">6 Models</span>
+      </div>
+      <table class="model-table">
+        <thead>
+          <tr>
+            <th>Model</th>
+            <th>R² Score</th>
+            <th>RMSE</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>
+              <div class="model-name">XGBoost</div>
+              <div class="model-algo">Gradient Boosting</div>
+            </td>
+            <td>
+              <div class="score-wrap">
+                <div class="score-bar-bg"><div class="score-bar-fill" style="width:97%;background:var(--accent3)"></div></div>
+                <span class="score-val" style="color:var(--accent3)">0.97</span>
+              </div>
+            </td>
+            <td style="color:var(--accent3)">1.23</td>
+            <td><span class="pill pill-pass">PASS ✓</span></td>
+          </tr>
+          <tr>
+            <td>
+              <div class="model-name">Random Forest</div>
+              <div class="model-algo">Ensemble Trees</div>
+            </td>
+            <td>
+              <div class="score-wrap">
+                <div class="score-bar-bg"><div class="score-bar-fill" style="width:95%;background:var(--accent1)"></div></div>
+                <span class="score-val" style="color:var(--accent1)">0.95</span>
+              </div>
+            </td>
+            <td style="color:var(--accent1)">1.58</td>
+            <td><span class="pill pill-pass">PASS ✓</span></td>
+          </tr>
+          <tr>
+            <td>
+              <div class="model-name">Ridge Regression</div>
+              <div class="model-algo">L2 Regularization</div>
+            </td>
+            <td>
+              <div class="score-wrap">
+                <div class="score-bar-bg"><div class="score-bar-fill" style="width:89%;background:var(--accent2)"></div></div>
+                <span class="score-val" style="color:var(--accent2)">0.89</span>
+              </div>
+            </td>
+            <td style="color:var(--accent2)">2.11</td>
+            <td><span class="pill pill-pass">PASS ✓</span></td>
+          </tr>
+          <tr>
+            <td>
+              <div class="model-name">Lasso Regression</div>
+              <div class="model-algo">L1 Regularization</div>
+            </td>
+            <td>
+              <div class="score-wrap">
+                <div class="score-bar-bg"><div class="score-bar-fill" style="width:87%;background:var(--accent4)"></div></div>
+                <span class="score-val" style="color:var(--accent4)">0.87</span>
+              </div>
+            </td>
+            <td style="color:var(--accent4)">2.34</td>
+            <td><span class="pill pill-pass">PASS ✓</span></td>
+          </tr>
+          <tr>
+            <td>
+              <div class="model-name">SVR</div>
+              <div class="model-algo">Support Vector</div>
+            </td>
+            <td>
+              <div class="score-wrap">
+                <div class="score-bar-bg"><div class="score-bar-fill" style="width:82%;background:var(--accent4)"></div></div>
+                <span class="score-val" style="color:var(--accent4)">0.82</span>
+              </div>
+            </td>
+            <td style="color:var(--accent4)">2.91</td>
+            <td><span class="pill pill-warn">TUNE ⚠</span></td>
+          </tr>
+          <tr>
+            <td>
+              <div class="model-name">Linear Regression</div>
+              <div class="model-algo">OLS Baseline</div>
+            </td>
+            <td>
+              <div class="score-wrap">
+                <div class="score-bar-bg"><div class="score-bar-fill" style="width:74%;background:var(--danger)"></div></div>
+                <span class="score-val" style="color:var(--danger)">0.74</span>
+              </div>
+            </td>
+            <td style="color:var(--danger)">3.87</td>
+            <td><span class="pill pill-warn">TUNE ⚠</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- CLASSIFICATION BLOCK -->
+    <div class="engine-block">
+      <div class="engine-header" style="background:rgba(167,139,250,0.04)">
+        <div class="engine-icon" style="background:rgba(167,139,250,0.12);color:var(--accent2)">🔬</div>
+        <div>
+          <h2 style="color:var(--accent2)">Classification Engines</h2>
+          <div style="font-size:0.65rem;color:var(--muted)">Discrete Label Prediction</div>
+        </div>
+        <span class="tag pill pill-pass">6 Models</span>
+      </div>
+      <table class="model-table">
+        <thead>
+          <tr>
+            <th>Model</th>
+            <th>Accuracy</th>
+            <th>F1 Score</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>
+              <div class="model-name">Random Forest</div>
+              <div class="model-algo">Ensemble Trees</div>
+            </td>
+            <td>
+              <div class="score-wrap">
+                <div class="score-bar-bg"><div class="score-bar-fill" style="width:98%;background:var(--accent3)"></div></div>
+                <span class="score-val" style="color:var(--accent3)">98.2%</span>
+              </div>
+            </td>
+            <td style="color:var(--accent3)">0.981</td>
+            <td><span class="pill pill-pass">PASS ✓</span></td>
+          </tr>
+          <tr>
+            <td>
+              <div class="model-name">XGBoost</div>
+              <div class="model-algo">Gradient Boosting</div>
+            </td>
+            <td>
+              <div class="score-wrap">
+                <div class="score-bar-bg"><div class="score-bar-fill" style="width:97%;background:var(--accent1)"></div></div>
+                <span class="score-val" style="color:var(--accent1)">97.5%</span>
+              </div>
+            </td>
+            <td style="color:var(--accent1)">0.974</td>
+            <td><span class="pill pill-pass">PASS ✓</span></td>
+          </tr>
+          <tr>
+            <td>
+              <div class="model-name">SVM (RBF)</div>
+              <div class="model-algo">Support Vector</div>
+            </td>
+            <td>
+              <div class="score-wrap">
+                <div class="score-bar-bg"><div class="score-bar-fill" style="width:95%;background:var(--accent2)"></div></div>
+                <span class="score-val" style="color:var(--accent2)">95.1%</span>
+              </div>
+            </td>
+            <td style="color:var(--accent2)">0.949</td>
+            <td><span class="pill pill-pass">PASS ✓</span></td>
+          </tr>
+          <tr>
+            <td>
+              <div class="model-name">Logistic Regression</div>
+              <div class="model-algo">Linear Classifier</div>
+            </td>
+            <td>
+              <div class="score-wrap">
+                <div class="score-bar-bg"><div class="score-bar-fill" style="width:91%;background:var(--accent4)"></div></div>
+                <span class="score-val" style="color:var(--accent4)">91.3%</span>
+              </div>
+            </td>
+            <td style="color:var(--accent4)">0.910</td>
+            <td><span class="pill pill-pass">PASS ✓</span></td>
+          </tr>
+          <tr>
+            <td>
+              <div class="model-name">K-Nearest Neighbors</div>
+              <div class="model-algo">Instance-Based</div>
+            </td>
+            <td>
+              <div class="score-wrap">
+                <div class="score-bar-bg"><div class="score-bar-fill" style="width:88%;background:var(--accent4)"></div></div>
+                <span class="score-val" style="color:var(--accent4)">88.7%</span>
+              </div>
+            </td>
+            <td style="color:var(--accent4)">0.882</td>
+            <td><span class="pill pill-pass">PASS ✓</span></td>
+          </tr>
+          <tr>
+            <td>
+              <div class="model-name">Decision Tree</div>
+              <div class="model-algo">CART · Baseline</div>
+            </td>
+            <td>
+              <div class="score-wrap">
+                <div class="score-bar-bg"><div class="score-bar-fill" style="width:83%;background:var(--accent4)"></div></div>
+                <span class="score-val" style="color:var(--accent4)">83.4%</span>
+              </div>
+            </td>
+            <td style="color:var(--accent4)">0.831</td>
+            <td><span class="pill pill-pass">PASS ✓</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- KEY METRICS CARDS -->
+  <div class="section-title fade-up delay-3">Key Metrics Reference</div>
+  <div class="metrics-row fade-up delay-3">
+    <div class="metric-card">
+      <h4>📉 Regression Metrics</h4>
+      <div class="metric-item"><span class="k">R² Score</span><span class="v" style="color:var(--accent3)">Variance explained</span></div>
+      <div class="metric-item"><span class="k">RMSE</span><span class="v" style="color:var(--accent1)">Root Mean Sq. Error</span></div>
+      <div class="metric-item"><span class="k">MAE</span><span class="v" style="color:var(--accent2)">Mean Absolute Error</span></div>
+      <div class="metric-item"><span class="k">MAPE</span><span class="v" style="color:var(--accent4)">% Error</span></div>
+      <div class="metric-item"><span class="k">Adj. R²</span><span class="v" style="color:var(--accent3)">Penalizes features</span></div>
+    </div>
+    <div class="metric-card">
+      <h4>🔬 Classification Metrics</h4>
+      <div class="metric-item"><span class="k">Accuracy</span><span class="v" style="color:var(--accent3)">Correct / Total</span></div>
+      <div class="metric-item"><span class="k">Precision</span><span class="v" style="color:var(--accent1)">TP / (TP+FP)</span></div>
+      <div class="metric-item"><span class="k">Recall</span><span class="v" style="color:var(--accent2)">TP / (TP+FN)</span></div>
+      <div class="metric-item"><span class="k">F1 Score</span><span class="v" style="color:var(--accent4)">Harmonic Mean</span></div>
+      <div class="metric-item"><span class="k">AUC-ROC</span><span class="v" style="color:var(--accent3)">Class separability</span></div>
+    </div>
+    <div class="metric-card">
+      <h4>🧩 Feature Engineering</h4>
+      <div class="metric-item"><span class="k">Encoding</span><span class="v" style="color:var(--accent1)">OneHot · Label</span></div>
+      <div class="metric-item"><span class="k">Scaling</span><span class="v" style="color:var(--accent2)">StandardScaler</span></div>
+      <div class="metric-item"><span class="k">Imputation</span><span class="v" style="color:var(--accent3)">Mean · KNN</span></div>
+      <div class="metric-item"><span class="k">Selection</span><span class="v" style="color:var(--accent4)">RFE · SHAP</span></div>
+      <div class="metric-item"><span class="k">Reduction</span><span class="v" style="color:var(--accent1)">PCA · t-SNE</span></div>
+    </div>
+    <div class="metric-card">
+      <h4>⚙️ Training Strategy</h4>
+      <div class="metric-item"><span class="k">Validation</span><span class="v" style="color:var(--accent3)">5-Fold CV</span></div>
+      <div class="metric-item"><span class="k">Tuning</span><span class="v" style="color:var(--accent1)">GridSearchCV</span></div>
+      <div class="metric-item"><span class="k">Split</span><span class="v" style="color:var(--accent2)">80 / 20</span></div>
+      <div class="metric-item"><span class="k">Overfit Check</span><span class="v" style="color:var(--accent4)">Train vs Val gap</span></div>
+      <div class="metric-item"><span class="k">Reproducibility</span><span class="v" style="color:var(--accent3)">random_state=42</span></div>
+    </div>
+  </div>
+
+  <!-- QA CHECKLISTS -->
+  <div class="section-title fade-up delay-4">QA Checklists</div>
+  <div class="check-grid fade-up delay-4">
+
+    <div class="check-card">
+      <h3><span style="color:var(--accent1)">📥</span> Data Quality</h3>
+      <div class="check-item">
+        <span class="check-icon">✅</span>
+        <div class="check-text"><div class="main">Missing values handled</div><div class="desc">Imputation applied · No nulls remain</div></div>
+      </div>
+      <div class="check-item">
+        <span class="check-icon">✅</span>
+        <div class="check-text"><div class="main">Outliers detected &amp; treated</div><div class="desc">IQR method · Z-score flagging</div></div>
+      </div>
+      <div class="check-item">
+        <span class="check-icon">✅</span>
+        <div class="check-text"><div class="main">Class balance verified</div><div class="desc">SMOTE applied where needed</div></div>
+      </div>
+      <div class="check-item">
+        <span class="check-icon">✅</span>
+        <div class="check-text"><div class="main">Data leakage prevented</div><div class="desc">Fit on train only · Test kept clean</div></div>
+      </div>
+      <div class="check-item">
+        <span class="check-icon">✅</span>
+        <div class="check-text"><div class="main">Feature distributions reviewed</div><div class="desc">Histograms · Skewness checked</div></div>
+      </div>
+    </div>
+
+    <div class="check-card">
+      <h3><span style="color:var(--accent2)">⚙️</span> Model Training</h3>
+      <div class="check-item">
+        <span class="check-icon">✅</span>
+        <div class="check-text"><div class="main">Cross-validation applied</div><div class="desc">5-Fold CV on all models</div></div>
+      </div>
+      <div class="check-item">
+        <span class="check-icon">✅</span>
+        <div class="check-text"><div class="main">Hyperparameter tuning done</div><div class="desc">GridSearchCV / RandomizedSearch</div></div>
+      </div>
+      <div class="check-item">
+        <span class="check-icon">✅</span>
+        <div class="check-text"><div class="main">Baseline model compared</div><div class="desc">Linear / Logistic as reference</div></div>
+      </div>
+      <div class="check-item">
+        <span class="check-icon">⚠️</span>
+        <div class="check-text"><div class="main">SVR kernel needs re-check</div><div class="desc">RBF vs Poly — underfitting signs</div></div>
+      </div>
+      <div class="check-item">
+        <span class="check-icon">✅</span>
+        <div class="check-text"><div class="main">Reproducibility confirmed</div><div class="desc">random_state fixed across runs</div></div>
+      </div>
+    </div>
+
+    <div class="check-card">
+      <h3><span style="color:var(--accent3)">📈</span> Evaluation</h3>
+      <div class="check-item">
+        <span class="check-icon">✅</span>
+        <div class="check-text"><div class="main">All primary metrics computed</div><div class="desc">R², RMSE, Accuracy, F1, AUC</div></div>
+      </div>
+      <div class="check-item">
+        <span class="check-icon">✅</span>
+        <div class="check-text"><div class="main">Confusion matrix reviewed</div><div class="desc">Classification false-positive check</div></div>
+      </div>
+      <div class="check-item">
+        <span class="check-icon">✅</span>
+        <div class="check-text"><div class="main">Residual plots analyzed</div><div class="desc">Regression error distribution</div></div>
+      </div>
+      <div class="check-item">
+        <span class="check-icon">✅</span>
+        <div class="check-text"><div class="main">Feature importance extracted</div><div class="desc">SHAP values for top models</div></div>
+      </div>
+      <div class="check-item">
+        <span class="check-icon">✅</span>
+        <div class="check-text"><div class="main">ROC-AUC curve plotted</div><div class="desc">All classifiers evaluated</div></div>
+      </div>
+    </div>
+
+    <div class="check-card">
+      <h3><span style="color:var(--accent4)">🚀</span> Deployment Ready</h3>
+      <div class="check-item">
+        <span class="check-icon">✅</span>
+        <div class="check-text"><div class="main">Model serialization tested</div><div class="desc">Pickle / Joblib · ONNX export</div></div>
+      </div>
+      <div class="check-item">
+        <span class="check-icon">✅</span>
+        <div class="check-text"><div class="main">Inference latency measured</div><div class="desc">&lt;50ms average per prediction</div></div>
+      </div>
+      <div class="check-item">
+        <span class="check-icon">✅</span>
+        <div class="check-text"><div class="main">Input schema documented</div><div class="desc">Feature names, types, ranges</div></div>
+      </div>
+      <div class="check-item">
+        <span class="check-icon">⚠️</span>
+        <div class="check-text"><div class="main">Linear Reg. below threshold</div><div class="desc">R²=0.74 — consider retraining</div></div>
+      </div>
+      <div class="check-item">
+        <span class="check-icon">✅</span>
+        <div class="check-text"><div class="main">Version control committed</div><div class="desc">Git-tracked · MLflow logged</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer>
+    <span>ML Engine Review · End-to-End · v2.0</span>
+    <span>Generated: April 2026 · 12 Models Reviewed</span>
+    <span style="color:var(--accent3)">10 PASSED · 2 NEED TUNING</span>
+  </footer>
+
+</div>
+</body>
+</html>
