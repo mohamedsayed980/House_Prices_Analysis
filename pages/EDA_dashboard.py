@@ -140,20 +140,12 @@ st.markdown("""
 import pathlib
  
 _root  = pathlib.Path(__file__).parent.parent
-_part1 = _root / "data" / "olist_full_clean_part1.csv"
-_part2 = _root / "data" / "olist_full_clean_part2.csv"
-_full  = _root / "data" / "olist_full_clean.csv"
- 
+_full  = _root / "data" / "house_prices_clean.csv"  # ← P1 filename
+
 @st.cache_data
 def _load_auto():
-    """Auto-load from GitHub data/ folder — full or split parts"""
     if _full.exists():
         return pd.read_csv(_full)
-    elif _part1.exists() and _part2.exists():
-        return pd.concat([
-            pd.read_csv(_part1),
-            pd.read_csv(_part2)
-        ], ignore_index=True)
     return pd.DataFrame()
  
 with st.sidebar:
