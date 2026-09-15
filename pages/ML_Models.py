@@ -477,31 +477,23 @@ def acc_colour(v: float) -> str:
 # F — FILE LOADER (Auto-loads split parts OR manual upload)
 # =============================================================================
 import pathlib
-
+ 
 _root  = pathlib.Path(__file__).parent.parent
-_part1 = _root / "data" / "olist_full_clean_part1.csv"
-_part2 = _root / "data" / "olist_full_clean_part2.csv"
-_full  = _root / "data" / "olist_full_clean.csv"
+_full  = _root / "data" / "kc_house_data"   
 
 @st.cache_data
 def _load_auto():
-    """Auto-load from GitHub data/ folder — full or split parts"""
     if _full.exists():
         return pd.read_csv(_full)
-    elif _part1.exists() and _part2.exists():
-        return pd.concat([
-            pd.read_csv(_part1),
-            pd.read_csv(_part2)
-        ], ignore_index=True)
     return pd.DataFrame()
-
+ 
 with st.sidebar:
     st.image(str(LOGO), width=70)
     st.markdown("---")
-
+ 
 with st.container():
     col_load, col_target, col_thresh, col_info = st.columns([3, 2, 2, 3])
-
+ 
     with col_load:
         # ── Try auto-load first ──────────────────────────────
         if st.session_state.df_raw is None:
@@ -518,7 +510,7 @@ with st.container():
                 if len(st.session_state.cat_cols) == 0:
                     st.session_state.cat_cols = _auto_df.select_dtypes(
                         include="object").columns.tolist()
-
+ 
         # ── Manual upload as fallback ────────────────────────
         uploaded = st.file_uploader(
             "📂 Load Dataset (.csv)", type=["csv"],
@@ -543,14 +535,14 @@ with st.container():
                            f"{df.shape[0]:,} rows × {df.shape[1]} columns")
             except Exception as e:
                 st.error(f"Error loading file: {e}")
-
+ 
         # ── Status message ───────────────────────────────────
         if st.session_state.df_raw is not None:
             _src = "data/ folder" if not uploaded else uploaded.name
             st.success(f"✅ {st.session_state.file_name} loaded "
                        f"({st.session_state.df_raw.shape[0]:,} rows) "
                        f"— from {_src}")
-
+ 
     with col_target:
         if st.session_state.df_raw is not None:
             cols = st.session_state.df_raw.columns.tolist()
@@ -559,7 +551,7 @@ with st.container():
             target = st.selectbox("🎯 Target Variable",
                                   cols, index=default_idx)
             st.session_state.target_col = target
-
+ 
     with col_thresh:
         thresh = st.slider(
             "Correlation Threshold",
@@ -568,7 +560,7 @@ with st.container():
             0.05
         )
         st.session_state.corr_threshold = thresh
-
+ 
     with col_info:
         if st.session_state.df_raw is not None:
             df = st.session_state.df_raw
@@ -585,7 +577,7 @@ with st.container():
             """, unsafe_allow_html=True)
         else:
             st.info("⬆️ Upload CSV or place in data/ folder.")
-
+ 
 st.markdown("---")
 
 # ─────────────────────────────────────────────────────────────────────────────
