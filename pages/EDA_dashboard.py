@@ -140,7 +140,7 @@ st.markdown("""
 import pathlib
  
 _root  = pathlib.Path(__file__).parent.parent
-_full  = _root / "data" / "kc_house_data.csv"   
+_full  = _root / "data" / "kc_house_data"   
 
 @st.cache_data
 def _load_auto():
