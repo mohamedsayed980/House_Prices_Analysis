@@ -53,7 +53,7 @@ from docx.shared import Pt, RGBColor, Inches
 # =============================================================================
 # ADD LOGO TO DASHBOARD 
 import pathlib
-LOGO = pathlib.Path(__file__).parent.parent / "3M_logo.png"
+LOGO = pathlib.Path(__file__).parent.parent / "M3_logo.png"
 
 # =============================================================================
 # C — SESSION STATE INITIALISATION
