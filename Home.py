@@ -11,7 +11,7 @@ import streamlit as st
 
 import pathlib
 
-LOGO = pathlib.Path(__file__).parent / "3M_logo.png"
+LOGO = pathlib.Path(__file__).parent / "M3_logo.png"
 col_logo, col_title = st.columns([1, 6])
 with col_logo:
     st.image(str(LOGO), width=100)
