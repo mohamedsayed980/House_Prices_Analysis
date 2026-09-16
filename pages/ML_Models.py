@@ -115,6 +115,18 @@ CLR = {
 # ─────────────────────────────────────────────────────────────────────────────
 # C  SESSION STATE INITIALISATION
 # ─────────────────────────────────────────────────────────────────────────────
+# Add these to your init_state() function or
+# at the top of the file after imports:
+
+if "price_bins" not in st.session_state:
+    st.session_state.price_bins = [0, 300000, 500000, 750000, float('inf')]
+if "price_labels" not in st.session_state:
+    st.session_state.price_labels = ["Budget","Mid","Premium","Luxury"]
+if "feat_names" not in st.session_state:
+    st.session_state.feat_names = []
+if "data_prepared_c" not in st.session_state:
+    st.session_state.data_prepared_c = False
+
 def init_state():
     defaults = {
         # ── EDA hand-off (written by ML_EDA_Dashboard) ──
@@ -546,7 +558,7 @@ with st.container():
     with col_target:
         if st.session_state.df_raw is not None:
             cols = st.session_state.df_raw.columns.tolist()
-            default_idx = cols.index("is_satisfied") \
+            default_idx = cols.index("price") \
                           if "is_satisfied" in cols else 0
             target = st.selectbox("🎯 Target Variable",
                                   cols, index=default_idx)
