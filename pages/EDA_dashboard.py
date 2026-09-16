@@ -483,7 +483,8 @@ with tabs[1]:
                     xy = df[[sel_var, tgt]].dropna()
                     ax.scatter(xy[sel_var], xy[tgt], alpha=0.35, s=14, color=BLUE, label="Data")
                     if len(xy) > 10:
-                        m, b = np.polyfit(xy[sel_var], xy[tgt], 1)
+                        m, b = np.polyfit(xy[sel_var].values.ravel(),
+                  xy[tgt].values.ravel(), 1)
                         x_l = np.linspace(xy[sel_var].min(), xy[sel_var].max(), 200)
                         ax.plot(x_l, m * x_l + b, color=RED, linewidth=2, label="Trend line")
                     corr_v = df[[sel_var, tgt]].corr().iloc[0, 1]
