@@ -58,8 +58,6 @@ LOGO = pathlib.Path(__file__).parent.parent / "3M_logo.png"
 # =============================================================================
 # C — SESSION STATE INITIALISATION
 # =============================================================================
-
-def init_state():
 # Add these to your init_state() function or
 # at the top of the file after imports:
 
@@ -71,6 +69,8 @@ if "feat_names" not in st.session_state:
     st.session_state.feat_names = []
 if "data_prepared_c" not in st.session_state:
     st.session_state.data_prepared_c = False
+def init_state():
+
     defaults = {
         "df_raw"      : None,   # original loaded dataframe
         "df_clean"    : None,   # after IQR cleaning (Tab 3)
