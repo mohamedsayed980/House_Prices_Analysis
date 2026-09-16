@@ -60,6 +60,17 @@ LOGO = pathlib.Path(__file__).parent.parent / "3M_logo.png"
 # =============================================================================
 
 def init_state():
+# Add these to your init_state() function or
+# at the top of the file after imports:
+
+if "price_bins" not in st.session_state:
+    st.session_state.price_bins = [0, 300000, 500000, 750000, float('inf')]
+if "price_labels" not in st.session_state:
+    st.session_state.price_labels = ["Budget","Mid","Premium","Luxury"]
+if "feat_names" not in st.session_state:
+    st.session_state.feat_names = []
+if "data_prepared_c" not in st.session_state:
+    st.session_state.data_prepared_c = False
     defaults = {
         "df_raw"      : None,   # original loaded dataframe
         "df_clean"    : None,   # after IQR cleaning (Tab 3)
