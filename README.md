@@ -1,4 +1,4 @@
-# 🏠 House Prices Analysis — End-to-End ML Engine
+# 🏠 P1_House Prices Analysis — End-to-End ML Engine
 
 <p align="center">
   <img src="M3_logo.png" width="120" alt="M3 Logo"/>
